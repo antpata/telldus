@@ -30,6 +30,7 @@
 #include "service/ProtocolWaveman.h"
 #include "service/ProtocolX10.h"
 #include "service/ProtocolYidong.h"
+#include "service/ProtocolCRX500.h"
 #include "common/Strings.h"
 
 class Protocol::PrivateData {
@@ -261,7 +262,12 @@ std::list<std::string> Protocol::decodeData(const std::string &fullData) {
 		if (decoded != "") {
 			retval.push_back(decoded);
 		}
-	}
+    } else if(TelldusCore::comparei(dataMsg.protocol(), L"CRX500") ) {
+        decoded = ProtocolCRX500::decodeData(dataMsg);
+        if (decoded != "") {
+            retval.push_back(decoded);
+        }
+    }
 
 	return retval;
 }
