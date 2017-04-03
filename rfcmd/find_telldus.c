@@ -17,7 +17,7 @@ int main(int argc, char **argv)
   
   ftdi_init(&ftdic);
 
-  if((ret = ftdi_usb_find_all(&ftdic, &devlist, 0x1781, 0x0c30)) < 0) {
+  if((ret = ftdi_usb_find_all(&ftdic, &devlist, 0x1781, 0x0c31)) < 0) {
     fprintf(stderr, "ftdi_usb_find_all failed: %d (%s)\n", ret, ftdi_get_error_string(&ftdic));
     return EXIT_FAILURE;
   }

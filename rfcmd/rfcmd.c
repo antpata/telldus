@@ -118,6 +118,7 @@ void printVersion(void);
 
 #ifdef LIBFTDI
 int usbWriteFtdi(char *cmdstr);
+int usbReadFtdi(char *cmdstr);
 #endif
 
 int main( int argc, char **argv )
@@ -172,6 +173,9 @@ int main( int argc, char **argv )
 		/* else - a send cmd string was created */
 	} else if ( (argc >= 2) && (strcmp(*(argv+1),"--version")==0) ) {
 		printVersion();
+		exit(1);
+	} else if ( (argc >= 2) && (strcmp(*(argv+1),"-R")==0) ) {
+		usbReadFtdi("");
 		exit(1);
 	} else { /* protocol or parameters not recognized */
 		printUsage();

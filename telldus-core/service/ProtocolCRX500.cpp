@@ -35,7 +35,8 @@ std::string ProtocolCRX500::decodeData(const ControllerMessage &dataMsg) {
     uint16_t id = (uint16_t)TelldusCore::hexTo64l(data.substr(0, 4));
     uint8_t channel = id&7;
     uint8_t dev_id = (id&0xE00)>>9;
-    uint8_t rnd_id = (id&0x1F8)>>3;
+    uint8_t rnd_id = (id&0x1F0)>>3;
+    uint8_t batt_ok = (id&0x8)>>3;
     int16_t value = 0;
     std::stringstream retString;
     retString << "class:sensor;protocol:CRX500;id:" << static_cast<int>(rnd_id) << static_cast<int>(dev_id) << static_cast<int>(channel+1) << ";model:";

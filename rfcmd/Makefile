@@ -1,8 +1,9 @@
 
 SRCS=	rfcmd.c ftdi.c
-CFLAGS=-O2	-Wall -I/usr/local/include
-LFLAGS=	-L/usr/local/lib -R/usr/local/lib
-#linux:LFLAGS=-Wl,-rpath,/usr/local/lib
+CFLAGS=-O2	-Wall -I/usr/local/include -pthread -DLIBFTDI -DNO_SEMAPHORES
+#LFLAGS=	-L/usr/local/lib -R/usr/local/lib
+#linux:
+LFLAGS=-Wl,-rpath,/usr/local/lib
 LIBS=	-lftdi -lusb
 PROG= 	rfcmd
 FT=	find_telldus

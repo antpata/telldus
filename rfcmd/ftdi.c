@@ -8,7 +8,8 @@
 #include <stdlib.h>
 #include <ftdi.h>
 
-#define BAUD 4800
+#define BAUD 9600
+/* 4800*/
 
 void ftdiCleanup(struct ftdi_context *ctx) {
 	ftdi_usb_close( ctx );
@@ -22,7 +23,7 @@ void ftdiCleanup(struct ftdi_context *ctx) {
 int usbWriteFtdi(char *cmdstr)
 {
 	struct ftdi_context ctx;
-	int device=0x0c30, vendor=0x1781;
+	int device=0x0c31, vendor=0x1781;
 	int retrycnt;
 	int retval = 0;
 
@@ -46,6 +47,7 @@ int usbWriteFtdi(char *cmdstr)
 		ftdi_deinit( &ctx );
 		return 2;
 	}
+    printf("test1\n");
 
 	if (ftdi_usb_reset( &ctx )) {
 		char *err = ftdi_get_error_string(&ctx);
@@ -54,6 +56,7 @@ int usbWriteFtdi(char *cmdstr)
 		ftdiCleanup(&ctx);
 		return retval;
 	}
+    printf("test2\n");
 
 	if (ftdi_disable_bitbang( &ctx ) || ftdi_set_baudrate(&ctx, BAUD)) {
 		char *err = ftdi_get_error_string(&ctx);
@@ -72,7 +75,7 @@ int usbWriteFtdi(char *cmdstr)
 		fprintf(stderr,  "usb - warning: %d bytes written instead of %d\n", 
 				retval, (int)strlen(cmdstr));
 	}
-
+    printf("send: %s\n", cmdstr);
 	/**
 	 * Wait for Tellstick to be done with cmd, read back until we've received
 	 * a \n indicating end of response.
@@ -106,5 +109,86 @@ int usbWriteFtdi(char *cmdstr)
 	fprintf(stderr,  "usb - warning: never got newline response, giving up on wait\n");
 	return retval;
 }
+
+int usbReadFtdi(char *cmdstr)
+{
+	struct ftdi_context ctx;
+	int device=0x0c31, vendor=0x1781;
+	int retrycnt;
+	int retval = 0;
+
+	if (ftdi_init( &ctx )) {
+		char *err = ftdi_get_error_string(&ctx);
+		fprintf(stderr,  "usb - init error: %s\n", err);
+		return 1;
+	}
+
+	retval = ftdi_usb_open(&ctx, vendor, device);
+	if (retval) {
+		char *err = ftdi_get_error_string(&ctx);
+		// FreeBSD says -3 when another rfcmd is running...
+		// Same on other systems?
+		if(retval == -3) {
+			fprintf(stderr,  "usb - open error: %s. Is it busy?\n", err);
+		} else {
+			fprintf(stderr,  "usb - open error: %s\n", err);
+		}
+
+		ftdi_deinit( &ctx );
+		return 2;
+	}
+    printf("test1\n");
+
+	if (ftdi_usb_reset( &ctx )) {
+		char *err = ftdi_get_error_string(&ctx);
+		fprintf(stderr,  "usb - reset error: %s\n", err);
+		retval = 3;
+		ftdiCleanup(&ctx);
+		return retval;
+	}
+    printf("test2\n");
+
+	if (ftdi_disable_bitbang( &ctx ) || ftdi_set_baudrate(&ctx, BAUD)) {
+		char *err = ftdi_get_error_string(&ctx);
+		fprintf(stderr,  "usb - init failed: %s\n", err);
+		ftdiCleanup(&ctx);
+		return 4;
+	}
+	/**
+	 * Wait for Tellstick to be done with cmd, read back until we've received
+	 * a \n indicating end of response.
+	 * Wait max 5000 * 1000uS.
+	 * XXX: Can the tellstick report errors?
+	 */
+	retval = 0;
+	retrycnt = 5000;
+	while (1 /*retrycnt--*/) {
+		unsigned char inb;
+		int bytes;
+
+		bytes = ftdi_read_data(&ctx, &inb, 1);
+		if (bytes == 0) {
+			usleep(1000);
+		} else if (bytes > 0) {
+            printf("%c", inb);
+			// Done when linefeed is received
+			if(inb == '\n') {
+                printf("\n");
+		//		ftdiCleanup(&ctx);
+		//		return retval;
+			}
+		} else {
+			char *err = ftdi_get_error_string(&ctx);
+			fprintf(stderr,  "usb - read error: %s\n", err);
+			ftdiCleanup(&ctx);
+			return 6;
+		}
+	}
+
+	// if we get here we failed to readback
+	fprintf(stderr,  "usb - warning: never got newline response, giving up on wait\n");
+	return retval;
+}
+
 
 
